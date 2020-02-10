@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block title%}天天生鲜-商品详情{% endblock %}
+
+
+{% block body %}
+<div class="breadcrumb">
+    <a href="#">全部分类</a>
+    <span>></span>
+    <a href="#">{{ sku.type }}</a>
+    <span>></span>
+    <a href="#">商品详情</a>
+</div>
+
+<div class="goods_detail_con clearfix">
+
+    <div class="goods_detail_pic fl"><img src='{{ sku.image.url }}'></div>
+    {% csrf_token %}
+    <div class="goods_detail_list fr">
+        <h3>{{ sku.name }}</h3>
+        <p>{{ sku.detail }}</p>
+        <div class="prize_bar">
+
+            <span class="show_pirze">¥<em>{{ sku.price }}</em></span>
+            <span class="show_unit">单  位：{{ sku.unite }}</span>
+        </div>
+        <div class="goods_num clearfix">
+            <div class="num_name fl">数 量：</div>
+            <div class="num_add fl">
+
+                <input type="text" class="num_show fl" value="1">
+                <a href="javascript:;" class="add fr">+</a>
+                <a href="javascript:;" class="minus fr">-</a>
+            </div>
+        </div>
+
+        <div>
+            {% if queryset_comment_spu_sku %}
+            <p>其他规格商品</p>
+            {% endif %}
+            <ul>
+                {% for i in queryset_comment_spu_sku %}
+                <li><a href='{% url "goods:detail" i.id %}'>{{ i.name }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="total">总价：<em>16.80元</em></div>
+        <div class="operate_btn">
+            <a href="javascript:;" class="buy_btn">立即购买</a>
+            <a href="javascript:;" class="add_cart" id="add_cart" sku_id="{{ sku.id }}">加入购物车</a>
+        </div>
+    </div>
+</div>
+
+<div class="main_wrap clearfix">
+    <div class="l_wrap fl clearfix">
+        <div class="new_goods">
+            <h3>新品推荐</h3>
+            <ul>
+                {% for i in queryset_common_type_sku %}
+                <li>
+                    <a href='{% url "goods:detail" i.id %}'><img src='{{ i.image.url }}'></a>
+                    <h4><a href='{% url "goods:detail" i.id %}'>{{ i.name }}</a></h4>
+                    <div class="prize">￥{{ i.price }}</div>
+                </li>
+                {% empty %}
+                没有同类型的商品。
+                {% endfor %}
+
+            </ul>
+        </div>
+    </div>
+
+    <div class="r_wrap fr clearfix">
+        <ul class="detail_tab clearfix">
+            <li class="active">商品介绍</li>
+            <li>评论</li>
+        </ul>
+
+        <div class="tab_content">
+            <dl>
+                <dt>商品详情：</dt>
+                <dd>{{ sku.spu.detail|safe }}</dd>
+            </dl>
+        </div>
+
+
+    </div>
+</div>
+{% endblock %}
+
+{% block bottom %}
+<div class="add_jump"></div>
+{% endblock %}
+
+{% block bottom_files %}
+<script type="text/javascript" src='{% static "js/jquery-1.12.4.min.js" %}'></script>
+<script type="text/javascript">
+        function update_total(){
+            var str_price=$('span[class="show_pirze"]').children("em").text();
+            var str_count=$('input[class*="num_show"]').val();
+            var float_price=parseFloat(str_price);
+            var int_count=parseInt(str_count);
+            var float_total=float_price*int_count;
+            $('div[class="total"]').children('em').text(float_total.toFixed(2)+'元');
+        }
+
+        update_total();
+
+        $('a[class="add fr"]').click(function(){
+                    var str_count=$('input[class*="num_show"]').val();
+                    var int_count=parseInt(str_count);
+                    int_count+=1;
+                    $('input[class*="num_show"]').val(int_count);
+                    update_total();
+                });
+
+        $('a[class="minus fr"]').click(function(){
+                    var str_count=$('input[class*="num_show"]').val();
+                    var int_count=parseInt(str_count);
+                    if(int_count>1){
+                        int_count-=1;
+                        $('input[class*="num_show"]').val(int_count);
+                        update_total();
+                    }
+                });
+
+        $('input[class*="num_show"]').blur(function(){
+            var str_count=$(this).val();
+            var int_count=parseInt(str_count);
+            if(int_count-int_count != 0)
+                int_count=1;
+            $(this).val(int_count);
+            update_total();
+        })
+
+		var $add_x = $('#add_cart').offset().top;
+		var $add_y = $('#add_cart').offset().left;
+		var $to_x = $('#show_count').offset().top;
+		var $to_y = $('#show_count').offset().left;
+
+		$('#add_cart').click(function(){
+		    var sku_id=$(this).attr("sku_id");
+		    var sku_count=$("input[class*='num_show']").val();
+            var csrf=$('input[name="csrfmiddlewaretoken"]').val();
+		    var dict_body={"sku_id":sku_id,"sku_count":sku_count,"csrfmiddlewaretoken":csrf};
+
+            $.post("/cart/add/",dict_body,function(data,status,xhr){
+                if(data.res=="0"){
+                    alert(data.errmsg);
+                }
+                else{
+                    $(".add_jump").css({'left':$add_y+80,'top':$add_x+10,'display':'block'})
+                    $(".add_jump").stop().animate({
+                        'left': $to_y+7,
+                        'top': $to_x+7},
+                        "fast", function() {
+                        $(".add_jump").fadeOut('fast',function(){
+                            $('#show_count').html(data.cart_count);
+                        });
+                    });
+                };
+            },"json");
+		})
+
+
+</script>
+{% endblock %}
+
+
+
+
+
+
+
+	

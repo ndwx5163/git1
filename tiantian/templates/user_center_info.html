@@ -1,0 +1,43 @@
+{% extends "base_user_center.html" %}
+{% load staticfiles %}
+
+
+{% block right %}
+    <div class="right_content clearfix">
+				<div class="info_con clearfix">
+				<h3 class="common_title2">基本信息</h3>
+						<ul class="user_info_list">
+							<li><span>用户名：</span>{{ user.username }}</li>
+                            {% if address %}
+                                <li><span>联系方式：</span>{{ address.phone }}</li>
+                                <li><span>联系地址：</span>{{ address.address }}</li>
+                            {% else %}
+                                <li><span>联系方式：</span>无</li>
+                                <li><span>联系地址：</span>无</li>
+                            {% endif %}
+						</ul>
+				</div>
+				
+				<h3 class="common_title2">最近浏览</h3>
+				<div class="has_view_list">
+					<ul class="goods_type_list clearfix">
+						{% for i in list_history_sku %}
+							<li>
+								<a href="{% url 'goods:detail' i.id %}" ><img src="{{ i.image.url }}"></a>
+								<h4><a href="{% url 'goods:detail' i.id %}">{{ i.name }}</a></h4>
+								<div class="operate">
+									<span class="prize">￥{{ i.price }}</span>
+									<span class="unit">{{ i.price }}/{{ i.unit }}</span>
+									<a href="#" class="add_goods" title="加入购物车"></a>
+								</div>
+							</li>
+						{% empty %}
+							<span>没有商品浏览记录。</span>
+						{% endfor %}
+					</ul>
+				</div>
+		</div>
+
+{% endblock %}
+
+

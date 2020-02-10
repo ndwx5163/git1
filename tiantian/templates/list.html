@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% block title %}天天生鲜-商品列表{% endblock %}
+
+
+{% block body %}
+<div class="breadcrumb">
+    <a href="#">全部分类</a>
+    <span></span>
+    <a href='{% url "goods:list" type.id 1 %}?sort={{ way_sort }}'>{{ type.name }}</a>
+</div>
+
+<div class="main_wrap clearfix">
+    <div class="l_wrap fl clearfix">
+        <div class="new_goods">
+            <h3>新品推荐</h3>
+            <ul>
+                {% for i in queryset_common_type_sku %}
+                <li>
+                    <a href='{% url "goods:detail" i.id %}'><img src='{{ i.image.url }}'></a>
+                    <h4><a href='{% url "goods:detail" i.id %}'>{{ i.name }}</a></h4>
+                    <div class="prize">￥{{ i.price }}</div>
+                </li>
+                {% empty %}
+                <span>没有最新商品。</span>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="r_wrap fr clearfix">
+        <div class="sort_bar">
+            <a href='{% url "goods:list" type.id 1 %}' {% if way_sort == "default" %}class="active" {% endif %}>默认</a>
+            <a href='{% url "goods:list" type.id 1 %}?sort=price' {% if way_sort == "price" %}class="active" {% endif %}>价格</a>
+            <a href='{% url "goods:list" type.id 1 %}?sort=sale' {% if way_sort == "sale" %}class="active" {% endif %}>销量</a>
+        </div>
+
+        <ul class="goods_type_list clearfix">
+            {% for i in obj_page %}
+            <li>
+                <a href='{% url "goods:detail" i.id %}'><img src='{{ i.image.url }}'></a>
+                <h4><a href='{% url "goods:detail" i.id %}'>{{ i.name }}</a></h4>
+                <div class="operate">
+                    <span class="prize">￥{{ i.price }}</span>
+                    <span class="unit">{{ i.price }}/{{ i.unite }}</span>
+                    <a href="#" class="add_goods" title="加入购物车"></a>
+                </div>
+            </li>
+            {% empty %}
+            <span>没有商品。</span>
+            {% endfor %}
+        </ul>
+
+        <div class="pagenation">
+            {% if obj_page.has_previous %}
+            <a href='{% url "goods:list" type.id obj_page.previous_page_number %}?sort={{ way_sort }}'>上一页</a>
+            {% endif %}
+
+            {% for i in list_page %}
+            {% if i == obj_page.number %}
+            <a href='{% url "goods:list" type.id i %}?sort={{ way_sort }}' class="active">{{ i }}</a>
+            {% else %}
+            <a href='{% url "goods:list" type.id i %}?sort={{ way_sort }}'>{{ i }}</a>
+            {% endif %}
+            {% endfor %}
+
+
+            {% if obj_page.has_next %}
+            <a href='{% url "goods:list" type.id obj_page.next_page_number %}?sort={{ way_sort }}'>下一页</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+
+
+

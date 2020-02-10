@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block title %}天天生鲜-首页{% endblock %}
+
+{% block top_files %}
+	<script type="text/javascript" src='{% static "js/jquery-1.12.4.min.js" %}'></script>
+	<script type="text/javascript" src='{% static "js/jquery-ui.min.js" %}'></script>
+	<script type="text/javascript" src='{% static "js/slide.js" %}'></script>
+{% endblock %}
+
+
+{% block body %}
+	<div class="center_con clearfix">
+		<ul class="subnav fl">
+			{% for i in queryset_type_good %}
+				<li><a href="{% url 'goods:list' i.id 1 %}" class="{{ i.logo }}">{{ i.name }}</a></li>
+			{% endfor %}
+		</ul>
+
+	<div class="slide fl">
+		<ul class="slide_pics">
+			{% for i in queryset_good_banner %}
+				<li><a href="#"><img src="{{ i.image.url }}" alt="幻灯片"></a></li>
+			{% endfor %}
+		</ul>
+		<div class="prev"></div>
+		<div class="next"></div>
+		<ul class="points"></ul>
+	</div>
+
+	<div class="adv fl">
+		{% for i in queryset_promotion_banner %}
+			<a href="{{ i.url }}"><img src="{{ i.image.url }}"></a>
+		{% endfor %}
+	</div>
+</div>
+
+	{% for i in queryset_type_good %}
+		<div class="list_model">
+			<div class="list_title clearfix">
+				<h3 class="fl" id="model01">{{i.name}}</h3>
+				<div class="subtitle fl">
+					<span>|</span>
+					{% for j in i.show_title %}
+						<a href='{% url "goods:detail" j.sku.id %}'>{{ j.sku.name }}</a>
+					{% endfor %}
+				</div>
+			<a href="{% url 'goods:list' i.id 1 %}" class="goods_more fr" id="fruit_more">查看更多 ></a>
+		</div>
+
+	<div class="goods_con clearfix">
+		<div class="goods_banner fl"><img src="{{ i.image.url }}"></div>
+		<ul class="goods_list fl">
+			{% for j in i.show_image %}
+				<li>
+					<h4><a href='{% url "goods:detail" j.sku.id %}'>{{ j.sku.name }}</a></h4>
+					<a href='{% url "goods:detail" j.sku.id %}'><img src="{{ j.sku.image.url }}"></a>
+					<div class="prize">¥ {{ j.sku.price }}</div>
+				</li>
+			{% endfor %}
+		</ul>
+	</div>
+</div>
+	{% endfor %}
+{% endblock %}
+
+{% block bottom_files %}
+	<script type="text/javascript" src='{% static "js/slide.js" %}'></script>
+	<script type="text/javascript">
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% block title %}{{ query }}{% endblock %}
+
+
+{% block body %}
+<div class="breadcrumb">
+    <a href="#">全部分类</a>
+    <span></span>
+    <a href='#'>{{ query }}</a>
+</div>
+
+<div class="main_wrap clearfix">
+    <div class="r_wrap fr clearfix">
+        <ul class="goods_type_list clearfix">
+            {% for i in page %}
+            <li>
+                <a href='{% url "goods:detail" i.object.id %}'><img src='{{ i.object.image.url }}'></a>
+                <h4><a href='{% url "goods:detail" i.object.id %}'>{{ i.object.name }}</a></h4>
+                <div class="operate">
+                    <span class="prize">￥{{ i.object.price }}</span>
+                    <span class="unit">{{ i.object.price }}/{{ i.object.unite }}</span>
+                    <a href="#" class="add_goods" title="加入购物车"></a>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+
+        <div class="pagenation">
+            {% if page.has_previous %}
+            <a href="">上一页</a>
+            {% endif %}
+
+            {% for i in paginator.page_range %}
+            {% if i == page.number %}
+            <a href="">{{ i }}</a>
+            {% else %}
+            <a href="">{{ i }}</a>
+            {% endif %}
+            {% endfor %}
+
+
+            {% if page.has_next %}
+            <a href=''>下一页</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+
+
+

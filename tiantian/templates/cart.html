@@ -1,0 +1,220 @@
+{% extends "base_no_cart.html" %}
+{% load staticfiles %}
+{% block title %}天天生鲜-购物车{% endblock %}
+
+{% static "images/goods/goods012.jpg" %}
+
+{% block name %}购物车{% endblock %}
+{% block body %}
+
+<div class="total_count">全部商品<em>{{ total_quantity }}</em>件</div>
+
+<ul class="cart_list_th clearfix">
+    <li class="col01">商品名称</li>
+    <li class="col02">商品单位</li>
+    <li class="col03">商品价格</li>
+    <li class="col04">数量</li>
+    <li class="col05">小计</li>
+    <li class="col06">操作</li>
+</ul>
+<form method="post" action="{% url 'order:place' %}">
+{% csrf_token %}
+{% for i in list_sku %}
+<ul class="cart_list_td clearfix">
+    <li class="col01"><input type="checkbox" checked="" name="sku_id" value="{{ i.id }}"></li>
+    <li class="col02"><img src='{{ i.image.url }}'></li>
+    <li class="col03">{{ i.name }}<br><em>{{ i.price }}元/{{ i.unite }}</em></li>
+    <li class="col04">{{ i.unite }}</li>
+    <li class="col05">{{ i.price }}元</li>
+    <li class="col06">
+        <div class="num_add">
+            <a href="javascript:;" class="add fl">+</a>
+            <input type="text" class="num_show fl" value="{{ i.quantity }}" sku_id="{{ i.id }}">
+            <a href="javascript:;" class="minus fl">-</a>
+        </div>
+    </li>
+    <li class="col07">{{ i.total }}元</li>
+
+    <li class="col08"><a href="javascript:;">删除</a></li>
+</ul>
+
+{% empty %}
+
+{% endfor %}
+
+<ul class="settlements">
+    <li class="col01"><input type="checkbox" name="" checked=""></li>
+    <li class="col02">全选</li>
+    <li class="col03">合计(不含运费)：<span>¥</span><em>{{ total_price }}</em><br>共计<b>{{ total_quantity }}</b>件商品</li>
+    <li class="col04"><input type="submit" value="去结算"></li>
+</ul>
+</form>
+
+{% endblock %}
+
+{% block bottom_files %}
+<script type="text/javascript" src='{% static "js/jquery-1.12.4.min.js" %}'></script>
+<script type="text/javascript">
+
+
+        //计算所有的sku的总小记，和总价格。应当在checked的状态改变之后调用。
+        function update_total(){
+            //找到所有被选中的sku的input标签的祖先元素，而且该元素是ul 。
+            var obj_inputs=$('ul[class="cart_list_td clearfix"]').find(":checked").parents('ul');
+            total_quantity=0;
+            total_price=0.0;
+            obj_inputs.each(function(){
+                str_quantity=$(this).find('input[class="num_show fl"]').val();
+                str_price=$(this).children('li[class="col07"]').text();
+                total_quantity+=parseInt(str_quantity);
+                total_price+=parseFloat(str_price);
+            });
+            $('ul[class="settlements"]').find('em').text(total_price.toFixed(2));
+            $('ul[class="settlements"]').find('b').text(total_quantity);
+        };
+
+        //全选的时候，所有sku都被选中
+        $('ul[class="settlements"]').find(":checkbox").change(function(){
+            var obj_input=$(this);
+            var obj_inputs=$('ul[class="cart_list_td clearfix"]').find(":checkbox");
+            var status=obj_input.is(':checked');
+            obj_inputs.each(function(){
+                $(this).prop('checked',status);
+            });
+            update_total();
+        });
+
+        //只要有一个sku没有被选中，全选就不会选中；如果都选中，全选就选中。
+        $('ul[class="cart_list_td clearfix"]').find(':checkbox').change(function(){
+            var max_len=$('ul[class="cart_list_td clearfix"]').find(':checkbox').length;
+            var current_len=$('ul[class="cart_list_td clearfix"]').find(':checked').length;
+            if(current_len == max_len)
+                $('ul[class="settlements"]').find(":checkbox").prop('checked',true);
+            else
+                $('ul[class="settlements"]').find(":checkbox").prop('checked',false);
+            update_total();
+        });
+
+        //点击增加++++按钮，触发AJAX，由于选择了多个<a> 这里使用this
+        $('a[class="add fl"]').click(function(){
+                current_count=$(this).next().val();
+                var sku_count=$(this).next().val();
+                sku_count=parseInt(sku_count);
+                //捣乱的人
+                if(sku_count-sku_count==0){
+                    sku_count+=1;
+                    var sku_id=$(this).next().attr('sku_id');
+                    sku_id=parseInt(sku_id);
+                    var csrf =$('input[name="csrfmiddlewaretoken"]').val();
+                    var dict_body={'sku_id':sku_id,'sku_count':sku_count,'csrfmiddlewaretoken':csrf};
+                    var obj_a=$(this)
+                    $.post('/cart/update/',dict_body,function(data){
+                        if(data.res==1){
+                            //在ajax当中不能使用$(this)，但是可以使用之前定义的变量。
+                            update_single_sku(sku_count,obj_a);//input_obj
+                            var is_checked=obj_a.parents('ul[class="cart_list_td clearfix"]').find(':checkbox').prop('checked');
+                            $('div[class="total_count"]').children('em').text(data.total_count);
+                            if(is_checked)
+                                update_total();
+                        }
+                    },'json');
+                }
+                else
+                    obj_a.next().val(current_count);
+        });
+
+        //点击--------------按钮，触发AJAX，由于选择了多个<a> 这里使用this
+        $('a[class="minus fl"]').click(function(){
+                var sku_count=$(this).prev().val();
+                sku_count=parseInt(sku_count);
+                //捣乱的人
+                if(sku_count-sku_count==0 && sku_count>1){
+                    sku_count-=1;
+                    var sku_id=$(this).prev().attr('sku_id');
+                    sku_id=parseInt(sku_id);
+                    var csrf =$('input[name="csrfmiddlewaretoken"]').val();
+                    var dict_body={'sku_id':sku_id,'sku_count':sku_count,'csrfmiddlewaretoken':csrf};
+                    var obj_a=$(this)
+                    $.post('/cart/update/',dict_body,function(data){
+                        if(data.res==1){
+                            //在ajax当中不能使用$(this)，但是可以使用之前定义的变量。
+                            update_single_sku(sku_count,obj_a);//input_obj
+                            var is_checked=obj_a.parents('ul[class="cart_list_td clearfix"]').find(':checkbox').prop('checked');
+                            $('div[class="total_count"]').children('em').text(data.total_count);
+                            if(is_checked)
+                                update_total();
+                        }
+                    },'json');
+                }
+
+        });
+
+        //捣乱的人
+        current_count=0;
+        $('input[class="num_show fl"]').focus(function(){
+            current_count=$(this).val();
+        });
+
+        //手动输入
+        $('input[class="num_show fl"]').change(function(){
+                var sku_count=$(this).val();
+                sku_count=parseInt(sku_count);
+                //捣乱的人
+                if(sku_count-sku_count==0 && sku_count>=1){
+                    var sku_id=$(this).attr('sku_id');
+                    sku_id=parseInt(sku_id);
+                    var csrf =$('input[name="csrfmiddlewaretoken"]').val();
+                    var dict_body={'sku_id':sku_id,'sku_count':sku_count,'csrfmiddlewaretoken':csrf};
+                    var obj_a=$(this).prev();
+                    $.post('/cart/update/',dict_body,function(data){
+                        if(data.res==1){
+                            //在ajax当中不能使用$(this)，但是可以使用之前定义的变量。
+                            update_single_sku(sku_count,obj_a);//input_obj
+                            $('div[class="total_count"]').children('em').text(data.total_count);
+                            var is_checked=obj_a.parents('ul[class="cart_list_td clearfix"]').find(':checkbox').prop('checked');
+                            if(is_checked)
+                                update_total();
+                        }
+                        else
+                            obj_a.next().val(current_count);
+                    },'json');
+                }
+                else
+                    $(this).val(current_count);
+        });
+
+
+        //刷新单个sku的物价；
+        function update_single_sku(sku_count,obj_a){
+            var price=obj_a.parents('ul[class="cart_list_td clearfix"]').children('li[class="col05"]').text();
+            price=parseFloat(price);
+            var price=price*sku_count;
+            obj_a.siblings('input[class="num_show fl"]').val(sku_count);
+            obj_a.parents('ul[class="cart_list_td clearfix"]').children('li[class="col07"]').text(price.toFixed(2)+'元');
+        };
+
+        //删除一个购物车中的商品。
+        $('ul[class="cart_list_td clearfix"]').children('li[class="col08"]').children('a').click(function(){
+            var sku_id=$(this).parent().siblings('li[class="col06"]').find('input[class="num_show fl"]').attr('sku_id');
+            var csrf=$('input[name="csrfmiddlewaretoken"]').val();
+            var dict_body={'sku_id':sku_id,'csrfmiddlewaretoken':csrf};
+            var is_checked=$(this).parents('ul[class="cart_list_td clearfix"]').find(':checkbox').prop('checked');
+            var obj_ul=$(this).parents('ul[class="cart_list_td clearfix"]');
+            $.post('/cart/delete/',dict_body,function(data){
+                if(data.res==1){
+                    obj_ul.remove();
+                    $('div[class="total_count"]').children('em').text(data.total_count);
+                    if(is_checked)
+                        update_total();
+                }
+                else{
+                    alert(data.errmsg);
+                }
+            },'json');
+        });
+
+
+</script>
+{% endblock %}
+
+
